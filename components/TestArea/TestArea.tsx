@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { UseTypingTestReturn, TestConfig } from "@/lib/engine/useTypingTest";
 import { playKeystroke } from "@/lib/sound";
 import LiveStats from "./LiveStats";
@@ -20,6 +20,7 @@ export default function TestArea(props: TestAreaProps) {
     liveStats,
     handleInput,
     handleKeyDown,
+    restart,
     soundEnabled,
     config,
   } = props;
@@ -27,42 +28,61 @@ export default function TestArea(props: TestAreaProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const wordsRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
+  const isRestartingRef = useRef(false);
 
-  // Focus on mount and whenever test restarts
+  // Smooth tab-restart state
+  const [fading, setFading] = useState(false);
+  const [enterKey, setEnterKey] = useState(0); // change = remount → triggers enter animation
+
+  // Focus on mount and after restart
   useEffect(() => {
     inputRef.current?.focus();
-  }, [status]);
+  }, [status, enterKey]);
 
-  const focusInput = useCallback(() => {
-    inputRef.current?.focus();
-  }, []);
+  const focusInput = useCallback(() => inputRef.current?.focus(), []);
 
-  // Position the caret after every render
+  // Caret positioning — run after every render, skip during fade/restart
   useLayoutEffect(() => {
-    if (!wordsRef.current || !caretRef.current) return;
+    const caret = caretRef.current;
     const container = wordsRef.current;
-    // Find the element with data-caret="true"
+    if (!caret || !container) return;
+
     const target = container.querySelector<HTMLElement>("[data-caret='true']");
     if (!target) return;
 
     const cRect = container.getBoundingClientRect();
     const tRect = target.getBoundingClientRect();
+    const left = tRect.left - cRect.left;
+    const top = tRect.top - cRect.top + container.scrollTop;
 
-    caretRef.current.style.left = `${tRect.left - cRect.left}px`;
-    caretRef.current.style.top = `${tRect.top - cRect.top + container.scrollTop}px`;
-    caretRef.current.style.height = `${tRect.height}px`;
+    // Snap caret on first render after restart (no sliding animation)
+    if (isRestartingRef.current) {
+      caret.style.transition = "none";
+      caret.style.left = `${left}px`;
+      caret.style.top = `${top}px`;
+      caret.style.height = `${tRect.height}px`;
+      // Re-enable smooth transition after one frame
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (caretRef.current) caretRef.current.style.transition = "";
+          isRestartingRef.current = false;
+        });
+      });
+    } else {
+      caret.style.left = `${left}px`;
+      caret.style.top = `${top}px`;
+      caret.style.height = `${tRect.height}px`;
+    }
   });
 
-  // Scroll active word into view (keep it on row 2)
+  // Scroll to keep active line near the top of the visible area
   useLayoutEffect(() => {
-    if (!wordsRef.current) return;
-    const active = wordsRef.current.querySelector<HTMLElement>(".word-active");
-    if (!active) return;
     const container = wordsRef.current;
+    if (!container) return;
+    const active = container.querySelector<HTMLElement>(".word-active");
+    if (!active) return;
     const lineH = parseFloat(getComputedStyle(container).lineHeight) || 44.8;
-    // Scroll so that the active word is always on the first visible line
-    const targetTop = active.offsetTop - lineH;
-    container.scrollTop = Math.max(0, targetTop);
+    container.scrollTop = Math.max(0, active.offsetTop - lineH);
   }, [activeWordIndex]);
 
   const onInput = useCallback(
@@ -73,16 +93,28 @@ export default function TestArea(props: TestAreaProps) {
     [handleInput, soundEnabled]
   );
 
+  // Intercept Tab for smooth fade-out → restart → fade-in
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        if (fading) return; // don't double-trigger
+        setFading(true);
+        setTimeout(() => {
+          isRestartingRef.current = true;
+          restart();
+          setFading(false);
+          setEnterKey((k) => k + 1); // remount words-wrapper → enter animation
+        }, 200);
+        return;
+      }
       handleKeyDown(e);
     },
-    [handleKeyDown]
+    [handleKeyDown, restart, fading]
   );
 
   return (
     <div className="test-area" onClick={focusInput}>
-      {/* Hidden input captures all keystrokes */}
       <input
         ref={inputRef}
         className="typing-input"
@@ -99,11 +131,15 @@ export default function TestArea(props: TestAreaProps) {
 
       <LiveStats stats={liveStats} status={status} config={config} />
 
-      <div className="words-wrapper" ref={wordsRef}>
-        {/* Caret */}
+      {/* key change on enterKey remounts this div → CSS enter animation plays */}
+      <div
+        key={enterKey}
+        ref={wordsRef}
+        className={`words-wrapper${fading ? " words-fading" : ""}`}
+      >
         <div
           ref={caretRef}
-          className={`caret ${status !== "running" ? "caret-blink" : ""}`}
+          className={`caret${status !== "running" ? " caret-blink" : ""}`}
           aria-hidden
         />
 
@@ -130,7 +166,6 @@ export default function TestArea(props: TestAreaProps) {
                 );
               })}
 
-              {/* Extra chars typed beyond word length */}
               {Array.from({ length: Math.max(0, states.length - word.length) }).map((_, ei) => {
                 const isCaret = isActive && caretPosition.charIndex === word.length + ei;
                 return (
@@ -144,13 +179,10 @@ export default function TestArea(props: TestAreaProps) {
                 );
               })}
 
-              {/* Caret anchor at end when cursor is past all chars */}
               {isActive &&
                 caretPosition.charIndex >=
                   word.length + Math.max(0, states.length - word.length) && (
-                  <span className="char char-pending" data-caret="true">
-                    &nbsp;
-                  </span>
+                  <span className="char char-pending" data-caret="true">&nbsp;</span>
                 )}
             </span>
           );

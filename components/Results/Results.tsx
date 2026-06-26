@@ -29,36 +29,38 @@ export default function Results({ stats, samples, config, onRestart, soundEnable
     if (newPB && soundEnabled) playVictory();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const charStr = `${stats.chars.correct}/${stats.chars.incorrect}/${stats.chars.extra}/${stats.chars.missed}`;
+
   return (
-    <div className="results">
+    <div className="results results-enter">
       {isNewPB && <div className="pb-badge">new personal best!</div>}
 
-      <div className="results-hero">
-        <div className="result-hero-item">
-          <span className="result-hero-value">{stats.wpm}</span>
-          <span className="result-hero-label">wpm</span>
+      {/* Two-column hero: stats left, chart right */}
+      <div className="results-top">
+        <div className="results-hero">
+          <div className="result-hero-item">
+            <span className="result-hero-label">wpm</span>
+            <span className="result-hero-value">{stats.wpm}</span>
+          </div>
+          <div className="result-hero-item">
+            <span className="result-hero-label">acc</span>
+            <span className="result-hero-value">{stats.accuracy}%</span>
+          </div>
         </div>
-        <div className="result-hero-item">
-          <span className="result-hero-value">{stats.accuracy}%</span>
-          <span className="result-hero-label">acc</span>
+        <div className="results-chart">
+          <WpmChart samples={samples} />
         </div>
       </div>
 
-      <WpmChart samples={samples} />
-
+      {/* Stats row */}
       <div className="results-secondary">
+        <StatTile label="test type" value={`${config.mode} ${config.amount || ""}`} dim />
         <StatTile label="raw" value={stats.raw} />
+        <StatTile label="characters" value={charStr} />
         <StatTile label="consistency" value={`${stats.consistency}%`} />
         <StatTile label="time" value={`${stats.time}s`} />
-        <StatTile label="correct" value={stats.chars.correct} accent />
-        <StatTile label="incorrect" value={stats.chars.incorrect} danger />
-        <StatTile label="extra" value={stats.chars.extra} danger />
-        <StatTile label="missed" value={stats.chars.missed} dim />
+        {prevBest && !isNewPB && <StatTile label="best" value={prevBest.wpm} dim />}
       </div>
-
-      {prevBest && !isNewPB && (
-        <p className="pb-compare">personal best: {prevBest.wpm} wpm</p>
-      )}
 
       <div className="results-actions">
         <button className="btn-primary" onClick={onRestart}>
