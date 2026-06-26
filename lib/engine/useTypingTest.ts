@@ -273,6 +273,16 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
 
       currentInputRef.current = value;
       setCurrentInput(value);
+
+      // Auto-complete last word in words mode (no space required)
+      if (mode === "words" && wi === amount - 1 && value === target) {
+        typedWordsRef.current = [...typedWordsRef.current, value];
+        target.split("").forEach((ch, ci) => {
+          keystrokeLog.current.push({ timestamp: Date.now(), correct: value[ci] === ch });
+        });
+        finishTestRef.current(wordStatesRef.current);
+        return;
+      }
     },
     [mode, amount, startTimer]
   );

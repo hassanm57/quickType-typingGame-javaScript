@@ -66,7 +66,7 @@ export default function Results({ stats, samples, config, onRestart, soundEnable
         <button className="btn-primary" onClick={onRestart}>
           next test
         </button>
-        <p className="hint hint-keys"><kbd>tab</kbd> — restart</p>
+        <p className="hint hint-keys"><kbd>tab</kbd> to restart</p>
       </div>
     </div>
   );

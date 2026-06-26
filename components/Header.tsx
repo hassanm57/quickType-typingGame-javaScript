@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Settings } from "@/lib/storage";
 import { THEMES } from "@/lib/themes";
 
@@ -10,9 +10,16 @@ interface Props {
 
 export default function Header({ settings, onSettingsChange }: Props) {
   const [showSettings, setShowSettings] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
 
   return (
-    <header className="site-header">
+    <header className={`site-header${scrolled ? " site-header-scrolled" : ""}`}>
       <div className="logo">
         <span className="logo-quick">quick</span>
         <span className="logo-type">Type</span>

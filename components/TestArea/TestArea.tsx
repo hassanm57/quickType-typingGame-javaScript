@@ -1,12 +1,10 @@
 "use client";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { UseTypingTestReturn, TestConfig } from "@/lib/engine/useTypingTest";
+import type { UseTypingTestReturn } from "@/lib/engine/useTypingTest";
 import { playKeystroke } from "@/lib/sound";
-import LiveStats from "./LiveStats";
 
 interface TestAreaProps extends UseTypingTestReturn {
   soundEnabled: boolean;
-  config: TestConfig;
 }
 
 export default function TestArea(props: TestAreaProps) {
@@ -17,12 +15,10 @@ export default function TestArea(props: TestAreaProps) {
     currentInput,
     wordStates,
     caretPosition,
-    liveStats,
     handleInput,
     handleKeyDown,
     restart,
     soundEnabled,
-    config,
   } = props;
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,13 +51,10 @@ export default function TestArea(props: TestAreaProps) {
     const left = tRect.left - cRect.left;
     const top = tRect.top - cRect.top + container.scrollTop;
 
-    // Snap caret on first render after restart (no sliding animation)
     if (isRestartingRef.current) {
       caret.style.transition = "none";
-      caret.style.left = `${left}px`;
-      caret.style.top = `${top}px`;
+      caret.style.transform = `translate(${left}px, ${top}px)`;
       caret.style.height = `${tRect.height}px`;
-      // Re-enable smooth transition after one frame
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (caretRef.current) caretRef.current.style.transition = "";
@@ -69,8 +62,7 @@ export default function TestArea(props: TestAreaProps) {
         });
       });
     } else {
-      caret.style.left = `${left}px`;
-      caret.style.top = `${top}px`;
+      caret.style.transform = `translate(${left}px, ${top}px)`;
       caret.style.height = `${tRect.height}px`;
     }
   });
@@ -128,8 +120,6 @@ export default function TestArea(props: TestAreaProps) {
         tabIndex={-1}
         aria-label="Typing input"
       />
-
-      <LiveStats stats={liveStats} status={status} config={config} />
 
       {/* key change on enterKey remounts this div → CSS enter animation plays */}
       <div
@@ -191,7 +181,7 @@ export default function TestArea(props: TestAreaProps) {
 
       {status !== "finished" && (
         <p className="hint hint-keys">
-          <kbd>tab</kbd> — restart
+          <kbd>tab</kbd> to restart
         </p>
       )}
     </div>
