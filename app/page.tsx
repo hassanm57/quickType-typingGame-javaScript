@@ -32,7 +32,7 @@ export default function Home() {
     setHydrated(true);
   }, []);
 
-  const handleSettingsChange = useCallback((s: Settings) => {
+  const handleSettingsChange = useCallback((s: Settings) => { // this callback is used to update the settings state and save the new settings to local storage. It also applies the selected theme and updates the sound enabled state.
     setSettings(s);
     saveSettings(s);
     applyTheme(s.theme);
