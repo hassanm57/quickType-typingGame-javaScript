@@ -61,7 +61,7 @@ export default function Home() {
             <main className="main">
               <ConfigBar config={config} onChange={handleConfigChange} />
               {test.status !== "finished" ? (
-                <TestArea {...test} soundEnabled={settings.soundEnabled} />
+                <TestArea {...test} soundEnabled={settings.soundEnabled} config={config} />
               ) : (
                 <Results
                   stats={test.finalStats!}

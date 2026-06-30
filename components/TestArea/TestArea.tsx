@@ -1,10 +1,12 @@
 "use client";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { UseTypingTestReturn } from "@/lib/engine/useTypingTest";
+import type { UseTypingTestReturn, TestConfig } from "@/lib/engine/useTypingTest";
 import { playKeystroke } from "@/lib/sound";
+import LiveStats from "./LiveStats";
 
 interface TestAreaProps extends UseTypingTestReturn {
   soundEnabled: boolean;
+  config: TestConfig;
 }
 
 export default function TestArea(props: TestAreaProps) {
@@ -15,10 +17,12 @@ export default function TestArea(props: TestAreaProps) {
     currentInput,
     wordStates,
     caretPosition,
+    liveStats,
     handleInput,
     handleKeyDown,
     restart,
     soundEnabled,
+    config,
   } = props;
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -107,6 +111,7 @@ export default function TestArea(props: TestAreaProps) {
 
   return (
     <div className="test-area" onClick={focusInput}>
+      <LiveStats stats={liveStats} status={status} config={config} />
       <input
         ref={inputRef}
         className="typing-input"
