@@ -9,15 +9,13 @@ interface Props {
 }
 
 export default function LiveStats({ stats, status, config }: Props) {
-  if (status === "idle") return null;
-
   const timerLabel =
     config.mode === "words" ? "words left" :
     config.mode === "zen" || config.mode === "sudden-death" ? "elapsed" :
     ""; // time/survival: just the number
 
   return (
-    <div className="live-stats">
+    <div className={`live-stats${status === "idle" ? " live-stats-idle" : ""}`}>
       <span className="live-stat-value">{stats.wpm}</span>
       <span className="live-stat-label">wpm</span>
       <span className="live-stat-sep" />

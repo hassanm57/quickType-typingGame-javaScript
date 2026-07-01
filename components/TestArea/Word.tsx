@@ -39,7 +39,7 @@ export default function Word({ word, states, isActive, isCurrent, caretCharIndex
       })}
       {/* Caret at end of word */}
       {isCurrent && caretCharIndex >= chars.length + extraCount && (
-        <span className="char char-pending char-caret-anchor" data-caret="true">&nbsp;</span>
+        <span className="char-caret-anchor" data-caret="true" />
       )}
     </span>
   );

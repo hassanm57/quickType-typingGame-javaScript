@@ -545,6 +545,14 @@ body {
   animation: fade-in-up 0.25s ease forwards;
 }
 
+/* Reserve the same space while idle so starting the test doesn't
+   change .main's content height and shift everything vertically
+   (main is vertically centered via justify-content: center). */
+.live-stats-idle {
+  visibility: hidden;
+  animation: none;
+}
+
 .live-stat-value {
   font-size: 1.6rem;
   font-weight: 300;
@@ -622,12 +630,19 @@ body {
 .char-extra     { color: var(--incorrect-extra); }
 .char-pending   { color: var(--sub); }
 
-/* End-of-word caret placeholder: needed for caret positioning, but must
-   contribute zero width so a fully-typed word doesn't push later words
-   to the right before space is pressed. */
+/* End-of-word caret placeholder: needed only so TestArea can read its
+   bounding rect to position the caret. Taken fully out of flow (absolute,
+   pinned to the word's own box) so it can never affect the word's width,
+   height, or baseline — an in-flow placeholder previously grew the word
+   horizontally (pre-space) and, once neutralized to zero width, still
+   threw off the line's height via font-fallback baseline metrics on the
+   whitespace glyph, shifting later lines down. */
 .char-caret-anchor {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  bottom: 0;
   width: 0;
-  overflow: hidden;
 }
 
 /* ── Caret — GPU-accelerated smooth slide via transform ── */

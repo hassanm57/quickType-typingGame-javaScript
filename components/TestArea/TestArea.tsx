@@ -177,7 +177,7 @@ export default function TestArea(props: TestAreaProps) {
               {isActive &&
                 caretPosition.charIndex >=
                   word.length + Math.max(0, states.length - word.length) && (
-                  <span className="char char-pending char-caret-anchor" data-caret="true">&nbsp;</span>
+                  <span className="char-caret-anchor" data-caret="true" />
                 )}
             </span>
           );
