@@ -45,6 +45,11 @@ export interface UseTypingTestReturn {
 }
 
 const BUFFER = 60;
+// Live WPM uses a trailing window rather than a whole-test average, so it
+// reflects the user's *current* pace instead of slowly drifting — a lifetime
+// average barely moves once a test has run for a while, which reads as
+// "stuck"/inaccurate if someone speeds up or slows down partway through.
+const LIVE_WPM_WINDOW_MS = 5000;
 
 function blankStates(n: number): CharState[][] {
   return Array.from({ length: n }, () => []);
@@ -173,8 +178,12 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
       const currentSecond = Math.floor(elapsed);
       if (currentSecond !== lastWpmSecondRef.current) {
         lastWpmSecondRef.current = currentSecond;
-        const correct = keystrokeLog.current.filter((e) => e.correct).length;
-        setLiveWpm(calcWpm(correct, elapsed * 1000));
+        const now = Date.now();
+        const windowStart = Math.max(startTimeRef.current, now - LIVE_WPM_WINDOW_MS);
+        const correctInWindow = keystrokeLog.current.filter(
+          (e) => e.correct && e.timestamp >= windowStart
+        ).length;
+        setLiveWpm(calcWpm(correctInWindow, now - windowStart));
       }
       setTick((t) => t + 1);
     }, 200);
