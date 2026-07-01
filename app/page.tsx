@@ -18,8 +18,7 @@ export default function Home() {
   const [config, setConfig] = useState<TestConfig>(DEFAULT_CONFIG);
   const [settings, setSettings] = useState<Settings>({
     theme: "ember",
-    soundEnabled: false,
-    smoothCaret: true,
+    soundEnabled: true,
   });
   const [hydrated, setHydrated] = useState(false);
   const [showLoading, setShowLoading] = useState(true);

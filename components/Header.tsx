@@ -11,6 +11,7 @@ interface Props {
 export default function Header({ settings, onSettingsChange }: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [soundIconKey, setSoundIconKey] = useState(0);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -27,6 +28,19 @@ export default function Header({ settings, onSettingsChange }: Props) {
       </div>
 
       <nav className="header-nav">
+        <button
+          className="icon-btn sound-btn"
+          title={settings.soundEnabled ? "Mute sound" : "Unmute sound"}
+          onClick={() => {
+            onSettingsChange({ ...settings, soundEnabled: !settings.soundEnabled });
+            setSoundIconKey((k) => k + 1);
+          }}
+          aria-label="Toggle sound"
+        >
+          <span key={soundIconKey} className="sound-icon">
+            {settings.soundEnabled ? "🔊" : "🔇"}
+          </span>
+        </button>
         <button
           className="icon-btn"
           title="Settings"
@@ -49,16 +63,6 @@ export default function Header({ settings, onSettingsChange }: Props) {
               onClick={() => onSettingsChange({ ...settings, soundEnabled: !settings.soundEnabled })}
             >
               {settings.soundEnabled ? "on" : "off"}
-            </button>
-          </div>
-
-          <div className="settings-row">
-            <span className="settings-label">smooth caret</span>
-            <button
-              className={`toggle-btn ${settings.smoothCaret ? "toggle-on" : ""}`}
-              onClick={() => onSettingsChange({ ...settings, smoothCaret: !settings.smoothCaret })}
-            >
-              {settings.smoothCaret ? "on" : "off"}
             </button>
           </div>
 

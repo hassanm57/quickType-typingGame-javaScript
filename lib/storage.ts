@@ -5,13 +5,11 @@ import type { TestStats } from "./engine/wpm";
 export interface Settings {
   theme: string;
   soundEnabled: boolean;
-  smoothCaret: boolean;
 }
 
 const DEFAULTS: Settings = {
   theme: DEFAULT_THEME,
-  soundEnabled: false,
-  smoothCaret: true,
+  soundEnabled: true,
 };
 
 export function loadSettings(): Settings {

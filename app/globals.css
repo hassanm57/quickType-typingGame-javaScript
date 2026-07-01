@@ -342,6 +342,17 @@ body {
   border-color: var(--accent-dim);
 }
 
+.sound-icon {
+  display: inline-block;
+  animation: sound-icon-pop 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes sound-icon-pop {
+  0%   { transform: scale(0.5) rotate(-15deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotate(4deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
 /* ── Settings panel ── */
 .settings-panel {
   position: absolute;
@@ -610,6 +621,14 @@ body {
 .char-incorrect { color: var(--incorrect); }
 .char-extra     { color: var(--incorrect-extra); }
 .char-pending   { color: var(--sub); }
+
+/* End-of-word caret placeholder: needed for caret positioning, but must
+   contribute zero width so a fully-typed word doesn't push later words
+   to the right before space is pressed. */
+.char-caret-anchor {
+  width: 0;
+  overflow: hidden;
+}
 
 /* ── Caret — GPU-accelerated smooth slide via transform ── */
 .caret {

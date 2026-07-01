@@ -11,6 +11,7 @@ export default function Footer({ theme }: Props) {
   return (
     <footer className="site-footer">
       <span className="footer-theme">{themeLabel}</span>
+      <span className="footer-credit">hassanm57</span>
     </footer>
   );
 }

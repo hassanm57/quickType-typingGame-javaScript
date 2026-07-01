@@ -72,6 +72,7 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
   const [finalStats, setFinalStats] = useState<TestStats | null>(null);
   const [wpmSamples, setWpmSamples] = useState<WpmSample[]>([]);
   const [tick, setTick] = useState(0);
+  const [liveWpm, setLiveWpm] = useState(0);
 
   // ── Refs (mutable, no re-render needed) ─────────────────────────────────────
   const wordsRef = useRef<string[]>(words);
@@ -84,6 +85,7 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
   const bonusTimeRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statusRef = useRef<TestStatus>("idle");
+  const lastWpmSecondRef = useRef(0);
 
   // Keep refs in sync with state
   useEffect(() => { wordsRef.current = words; }, [words]);
@@ -129,6 +131,7 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
     startTimeRef.current = 0;
     bonusTimeRef.current = 0;
     statusRef.current = "idle";
+    lastWpmSecondRef.current = 0;
     setWords(w);
     setWordStates(ws);
     setActiveWordIndex(0);
@@ -137,6 +140,7 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
     setFinalStats(null);
     setWpmSamples([]);
     setTick(0);
+    setLiveWpm(0);
   }, [mode, amount, stopTimer]);
 
   // Restart when config changes
@@ -155,6 +159,12 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
         finishTestRef.current(wordStatesRef.current);
         return;
       }
+      const currentSecond = Math.floor(elapsed);
+      if (currentSecond !== lastWpmSecondRef.current) {
+        lastWpmSecondRef.current = currentSecond;
+        const correct = keystrokeLog.current.filter((e) => e.correct).length;
+        setLiveWpm(calcWpm(correct, elapsed * 1000));
+      }
       setTick((t) => t + 1);
     }, 200);
   }, [mode, amount]);
@@ -165,14 +175,13 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
     const elapsed = (Date.now() - startTimeRef.current) / 1000;
     const log = keystrokeLog.current;
     const correct = log.filter((e) => e.correct).length;
-    const wpm = calcWpm(correct, elapsed * 1000);
     const accuracy = calcAccuracy(correct, log.length);
     let remaining = 0;
     if (mode === "time") remaining = Math.max(0, amount - elapsed);
     else if (mode === "survival") remaining = Math.max(0, amount + bonusTimeRef.current - elapsed);
     else if (mode === "words") remaining = Math.max(0, amount - activeIndexRef.current);
     else remaining = Math.round(elapsed);
-    return { wpm, accuracy, remaining: Math.round(remaining) };
+    return { wpm: liveWpm, accuracy, remaining: Math.round(remaining) };
   })();
 
   // ── Input handler ────────────────────────────────────────────────────────────
