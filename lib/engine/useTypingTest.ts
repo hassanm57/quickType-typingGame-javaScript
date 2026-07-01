@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { generateWords } from "./words";
+import { generatePracticeWords, generateWords } from "./words";
+import { recordWordResult } from "./wordStats";
 import {
   type CharState,
   type KeystrokeEntry,
@@ -12,7 +13,7 @@ import {
   calcWpm,
 } from "./wpm";
 
-export type TestMode = "time" | "words" | "zen" | "survival" | "sudden-death";
+export type TestMode = "time" | "words" | "zen" | "survival" | "sudden-death" | "practice";
 export type TestStatus = "idle" | "running" | "finished";
 
 export interface TestConfig {
@@ -58,13 +59,21 @@ function evaluate(target: string, typed: string): CharState[] {
   });
 }
 
+function isFixedCountMode(mode: TestMode): boolean {
+  return mode === "words" || mode === "practice";
+}
+
+function generateWordsFor(mode: TestMode, n: number): string[] {
+  return mode === "practice" ? generatePracticeWords(n) : generateWords(n);
+}
+
 export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
   const { mode, amount } = config;
 
-  const initialCount = mode === "words" ? amount : amount * 4 + BUFFER;
+  const initialCount = isFixedCountMode(mode) ? amount : amount * 4 + BUFFER;
 
   // ── Reactive state ──────────────────────────────────────────────────────────
-  const [words, setWords] = useState<string[]>(() => generateWords(initialCount));
+  const [words, setWords] = useState<string[]>(() => generateWordsFor(mode, initialCount));
   const [wordStates, setWordStates] = useState<CharState[][]>(() => blankStates(initialCount));
   const [activeWordIndex, setActiveWordIndex] = useState(0);
   const [currentInput, setCurrentInput] = useState("");
@@ -86,6 +95,7 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statusRef = useRef<TestStatus>("idle");
   const lastWpmSecondRef = useRef(0);
+  const wordStartTimeRef = useRef(0);
 
   // Keep refs in sync with state
   useEffect(() => { wordsRef.current = words; }, [words]);
@@ -119,8 +129,8 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
 
   const restart = useCallback(() => {
     stopTimer();
-    const n = mode === "words" ? amount : amount * 4 + BUFFER;
-    const w = generateWords(n);
+    const n = isFixedCountMode(mode) ? amount : amount * 4 + BUFFER;
+    const w = generateWordsFor(mode, n);
     const ws = blankStates(n);
     wordsRef.current = w;
     wordStatesRef.current = ws;
@@ -132,6 +142,7 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
     bonusTimeRef.current = 0;
     statusRef.current = "idle";
     lastWpmSecondRef.current = 0;
+    wordStartTimeRef.current = 0;
     setWords(w);
     setWordStates(ws);
     setActiveWordIndex(0);
@@ -179,7 +190,7 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
     let remaining = 0;
     if (mode === "time") remaining = Math.max(0, amount - elapsed);
     else if (mode === "survival") remaining = Math.max(0, amount + bonusTimeRef.current - elapsed);
-    else if (mode === "words") remaining = Math.max(0, amount - activeIndexRef.current);
+    else if (isFixedCountMode(mode)) remaining = Math.max(0, amount - activeIndexRef.current);
     else remaining = Math.round(elapsed);
     return { wpm: liveWpm, accuracy, remaining: Math.round(remaining) };
   })();
@@ -194,6 +205,7 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
         statusRef.current = "running";
         setStatus("running");
         startTimer();
+        wordStartTimeRef.current = Date.now();
       }
 
       const wi = activeIndexRef.current;
@@ -218,6 +230,8 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
           });
         });
 
+        recordWordResult(target, states, Date.now() - wordStartTimeRef.current);
+
         // Sudden death: incorrect commit ends game
         if (mode === "sudden-death" && states.some((s) => s === "incorrect" || s === "extra")) {
           finishTestRef.current(newWordStates);
@@ -229,20 +243,21 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
         setActiveWordIndex(nextIndex);
         currentInputRef.current = "";
         setCurrentInput("");
+        wordStartTimeRef.current = Date.now();
 
         // Survival: every 5 words = +10s
         if (mode === "survival" && nextIndex % 5 === 0) {
           bonusTimeRef.current += 10;
         }
 
-        // Words mode: finishing last word ends game
-        if (mode === "words" && nextIndex >= amount) {
+        // Words/practice mode: finishing last word ends game
+        if (isFixedCountMode(mode) && nextIndex >= amount) {
           finishTestRef.current(newWordStates);
           return;
         }
 
         // Extend buffer
-        if (mode !== "words" && nextIndex >= wordsRef.current.length - 15) {
+        if (!isFixedCountMode(mode) && nextIndex >= wordsRef.current.length - 15) {
           const more = generateWords(BUFFER);
           const moreStates = blankStates(BUFFER);
           setWords((prev) => { const next = [...prev, ...more]; wordsRef.current = next; return next; });
@@ -283,12 +298,13 @@ export default function useTypingTest(config: TestConfig): UseTypingTestReturn {
       currentInputRef.current = value;
       setCurrentInput(value);
 
-      // Auto-complete last word in words mode (no space required)
-      if (mode === "words" && wi === amount - 1 && value === target) {
+      // Auto-complete last word in words/practice mode (no space required)
+      if (isFixedCountMode(mode) && wi === amount - 1 && value === target) {
         typedWordsRef.current = [...typedWordsRef.current, value];
         target.split("").forEach((ch, ci) => {
           keystrokeLog.current.push({ timestamp: Date.now(), correct: value[ci] === ch });
         });
+        recordWordResult(target, states, Date.now() - wordStartTimeRef.current);
         finishTestRef.current(wordStatesRef.current);
         return;
       }

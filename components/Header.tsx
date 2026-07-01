@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { Settings } from "@/lib/storage";
 import { THEMES } from "@/lib/themes";
 
@@ -12,6 +14,8 @@ export default function Header({ settings, onSettingsChange }: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [soundIconKey, setSoundIconKey] = useState(0);
+  const pathname = usePathname();
+  const onRankings = pathname === "/rankings";
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -28,6 +32,14 @@ export default function Header({ settings, onSettingsChange }: Props) {
       </div>
 
       <nav className="header-nav">
+        <Link
+          className="icon-btn"
+          href={onRankings ? "/" : "/rankings"}
+          title={onRankings ? "Back to test" : "Rankings"}
+          aria-label="Rankings"
+        >
+          🏆
+        </Link>
         <button
           className="icon-btn sound-btn"
           title={settings.soundEnabled ? "Mute sound" : "Unmute sound"}

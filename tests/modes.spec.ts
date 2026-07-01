@@ -122,6 +122,35 @@ test.describe("Words mode", () => {
   });
 });
 
+test.describe("Practice mode", () => {
+  test("is selectable", async ({ page }) => {
+    await gotoTest(page);
+    await selectMode(page, "practice");
+    await expect(
+      page.locator(".config-btn.config-btn-active:has-text('practice')")
+    ).toBeVisible();
+  });
+
+  test("sub-options 10/25/50/100 are selectable", async ({ page }) => {
+    await gotoTest(page);
+    await selectMode(page, "practice");
+    for (const n of [10, 25, 50, 100]) {
+      await page.click(`.config-group:last-of-type .config-btn:has-text("${n}")`);
+      await expect(
+        page.locator(`.config-group:last-of-type .config-btn.config-btn-active:has-text("${n}")`)
+      ).toBeVisible();
+    }
+  });
+
+  test("completes and shows results after typing all words (cold start, no prior data)", async ({ page }) => {
+    await gotoTest(page);
+    await selectMode(page, "practice");
+    await selectAmount(page, 10);
+    await typeWords(page, 10);
+    await expect(page.locator(".results")).toBeVisible({ timeout: 8000 });
+  });
+});
+
 test.describe("Zen mode", () => {
   test("shows elapsed time counter while running", async ({ page }) => {
     await gotoTest(page);

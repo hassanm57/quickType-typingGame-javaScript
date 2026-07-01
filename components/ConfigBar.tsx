@@ -43,17 +43,27 @@ const IconDeath = () => (
   </svg>
 );
 
+const IconPractice = () => (
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
+    <circle cx="6.5" cy="6.5" r="4.7" stroke="currentColor" strokeWidth="1.3"/>
+    <circle cx="6.5" cy="6.5" r="2.3" stroke="currentColor" strokeWidth="1.3"/>
+    <circle cx="6.5" cy="6.5" r="0.7" fill="currentColor"/>
+  </svg>
+);
+
 const MODE_ICONS: Record<TestMode, React.ReactNode> = {
   time: <IconTime />,
   words: <IconWords />,
   zen: <IconZen />,
   survival: <IconSurvival />,
   "sudden-death": <IconDeath />,
+  practice: <IconPractice />,
 };
 
 const MODES: { id: TestMode; label: string }[] = [
   { id: "time", label: "time" },
   { id: "words", label: "words" },
+  { id: "practice", label: "practice" },
   { id: "zen", label: "zen" },
   { id: "survival", label: "survival" },
   { id: "sudden-death", label: "sudden death" },
@@ -62,6 +72,7 @@ const MODES: { id: TestMode; label: string }[] = [
 const SUB_OPTIONS: Partial<Record<TestMode, number[]>> = {
   time: [15, 30, 60, 120],
   words: [10, 25, 50, 100],
+  practice: [10, 25, 50, 100],
 };
 
 export default function ConfigBar({ config, onChange }: Props) {
@@ -78,6 +89,7 @@ export default function ConfigBar({ config, onChange }: Props) {
               const defaults: Record<TestMode, number> = {
                 time: 30,
                 words: 25,
+                practice: 25,
                 zen: 0,
                 survival: 30,
                 "sudden-death": 0,

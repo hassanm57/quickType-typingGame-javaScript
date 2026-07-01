@@ -10,7 +10,7 @@ interface Props {
 
 export default function LiveStats({ stats, status, config }: Props) {
   const timerLabel =
-    config.mode === "words" ? "words left" :
+    config.mode === "words" || config.mode === "practice" ? "words left" :
     config.mode === "zen" || config.mode === "sudden-death" ? "elapsed" :
     ""; // time/survival: just the number
 

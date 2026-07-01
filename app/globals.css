@@ -832,6 +832,7 @@ kbd {
 }
 
 .btn-primary {
+  display: inline-block;
   background: none;
   border: 1px solid var(--border);
   color: var(--sub);
@@ -841,6 +842,7 @@ kbd {
   border-radius: 3px;
   cursor: pointer;
   letter-spacing: 0.02em;
+  text-decoration: none;
   transition:
     border-color 0.15s ease,
     color 0.15s ease,
@@ -866,6 +868,130 @@ kbd {
   border-top: 1px solid var(--border);
   font-size: 0.73rem;
   color: var(--sub);
+}
+
+/* ── Rankings page ── */
+.rankings-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.rankings-main {
+  gap: 2.5rem;
+}
+
+.rankings-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.rankings-title {
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.rankings-sub {
+  font-size: 0.82rem;
+  color: var(--sub);
+}
+
+.rankings-grid {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.rankings-card {
+  flex: 1;
+  min-width: 280px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.rankings-empty-card {
+  flex: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2rem;
+}
+
+.rankings-card-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+  text-transform: lowercase;
+}
+
+.rankings-card-subtitle {
+  font-size: 0.75rem;
+  color: var(--sub);
+  margin-bottom: 1rem;
+}
+
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  list-style: none;
+}
+
+.rank-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.rank-word {
+  font-size: 0.95rem;
+}
+
+.rank-word-weak { color: var(--incorrect); }
+.rank-word-mastered { color: var(--correct); }
+
+.rank-meta {
+  font-size: 0.72rem;
+  color: var(--sub);
+  white-space: nowrap;
+}
+
+.rankings-empty {
+  font-size: 0.82rem;
+  color: var(--sub);
+}
+
+.rankings-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rankings-reset {
+  background: none;
+  border: none;
+  color: var(--sub);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0.5rem 0;
+  transition: color 0.15s ease;
+}
+.rankings-reset:hover { color: var(--incorrect); }
+
+@media (max-width: 720px) {
+  .rankings-grid { flex-direction: column; }
+  .rankings-card { width: 100%; }
 }
 
 /* ── Reduced motion ── */
